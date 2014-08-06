@@ -9,6 +9,12 @@
 $ something-that-produces-json | json-to-nsq --topic events
 ```
 
+## Installation
+
+```
+$ go get github.com/segmentio/json-to-nsq
+```
+
 # License
 
   MIT
