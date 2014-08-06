@@ -1,0 +1,72 @@
+package main
+
+import "github.com/segmentio/go-stats"
+import "github.com/docopt/docopt-go"
+import "github.com/segmentio/go-log"
+import "github.com/bitly/go-nsq"
+import "encoding/json"
+import "time"
+import "os"
+
+const Version = "0.0.1"
+
+const Usage = `
+  Usage:
+    json-to-nsq --topic name [--nsqd-tcp-address addr]
+    json-to-nsq -h | --help
+    json-to-nsq --version
+
+  Options:
+    -a, --nsqd-tcp-address addr  destination nsqd tcp address [default: localhost:4150]
+    -t, --topic name             destination topic name
+    -h, --help                   output help information
+    -v, --version                output version
+
+`
+
+var nl = []byte("\n")
+
+func main() {
+	args, err := docopt.Parse(Usage, nil, true, Version, false)
+	log.Check(err)
+
+	// options
+	addr := args["--nsqd-tcp-address"].(string)
+	topic := args["--topic"].(string)
+
+	// publisher
+	config := nsq.NewConfig()
+	pub, err := nsq.NewProducer(addr, config)
+	log.Check(err)
+
+	// stats
+	s := stats.New()
+	go s.TickEvery(5 * time.Second)
+
+	// start
+	d := json.NewDecoder(os.Stdin)
+
+	for {
+		var msg map[string]interface{}
+
+		err = d.Decode(&msg)
+		if err != nil {
+			log.Error("failed to decode message: %s", err)
+			continue
+		}
+
+		b, err := json.Marshal(msg)
+		if err != nil {
+			log.Error("failed to marshal message: %s", err)
+			continue
+		}
+
+		err = pub.Publish(topic, b)
+		if err != nil {
+			log.Error("failed to publish message: %s", err)
+			continue
+		}
+
+		s.Incr("messages.published")
+	}
+}
