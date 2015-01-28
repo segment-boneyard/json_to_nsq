@@ -7,8 +7,9 @@ import "github.com/bitly/go-nsq"
 import "encoding/json"
 import "time"
 import "os"
+import "io"
 
-const Version = "0.0.1"
+const Version = "0.0.2"
 
 const Usage = `
   Usage:
@@ -50,6 +51,11 @@ func main() {
 		var msg map[string]interface{}
 
 		err = d.Decode(&msg)
+
+		if err == io.EOF {
+			continue
+		}
+
 		if err != nil {
 			log.Error("failed to decode message: %s", err)
 			continue
