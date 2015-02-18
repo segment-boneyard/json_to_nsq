@@ -13,9 +13,9 @@ const Version = "0.0.2"
 
 const Usage = `
   Usage:
-    json-to-nsq --topic name [--nsqd-tcp-address addr]
-    json-to-nsq -h | --help
-    json-to-nsq --version
+    json_to_nsq --topic name [--nsqd-tcp-address addr]
+    json_to_nsq -h | --help
+    json_to_nsq --version
 
   Options:
     -a, --nsqd-tcp-address addr  destination nsqd tcp address [default: localhost:4150]
