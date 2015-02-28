@@ -2,10 +2,10 @@ package main
 
 import "github.com/segmentio/go-stats"
 import "github.com/docopt/docopt-go"
-import "github.com/segmentio/go-log"
 import "github.com/bitly/go-nsq"
 import "encoding/json"
 import "time"
+import "log"
 import "os"
 import "io"
 
@@ -29,7 +29,9 @@ var nl = []byte("\n")
 
 func main() {
 	args, err := docopt.Parse(Usage, nil, true, Version, false)
-	log.Check(err)
+	if err != nil {
+		log.Fatalf("error: %s", err)
+	}
 
 	// options
 	addr := args["--nsqd-tcp-address"].(string)
@@ -38,7 +40,10 @@ func main() {
 	// publisher
 	config := nsq.NewConfig()
 	pub, err := nsq.NewProducer(addr, config)
-	log.Check(err)
+	if err != nil {
+		log.Fatalf("error starting producer: %s", err)
+	}
+	defer pub.Stop()
 
 	// stats
 	s := stats.New()
@@ -53,23 +58,22 @@ func main() {
 		err = d.Decode(&msg)
 
 		if err == io.EOF {
-			continue
+			break
 		}
 
 		if err != nil {
-			log.Error("failed to decode message: %s", err)
-			continue
+			log.Fatalf("error decode message: %s", err)
 		}
 
 		b, err := json.Marshal(msg)
 		if err != nil {
-			log.Error("failed to marshal message: %s", err)
+			log.Printf("error marshal message: %s", err)
 			continue
 		}
 
 		err = pub.Publish(topic, b)
 		if err != nil {
-			log.Error("failed to publish message: %s", err)
+			log.Printf("error publishing message: %s", err)
 			continue
 		}
 
