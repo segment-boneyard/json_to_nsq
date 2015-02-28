@@ -9,7 +9,7 @@ import "log"
 import "os"
 import "io"
 
-const Version = "1.0.0"
+const Version = "1.0.1"
 
 const Usage = `
   Usage:
